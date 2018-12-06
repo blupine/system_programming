@@ -1,0 +1,1 @@
+cmd_/home/pi/Desktop/sp/pir/pir_km.ko := ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/pi/Desktop/sp/pir/pir_km.ko /home/pi/Desktop/sp/pir/pir_km.o /home/pi/Desktop/sp/pir/pir_km.mod.o ;  true

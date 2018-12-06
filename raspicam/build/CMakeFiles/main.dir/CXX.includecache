@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/pi/Desktop/sp/raspicam/main.cpp
+unistd.h
+-
+ctime
+-
+fstream
+-
+iostream
+-
+raspicam/raspicam.h
+-
+ctime
+-
+string.h
+-
+
+/usr/local/include/raspicam/raspicam.h
+cstdio
+-
+string
+-
+raspicamtypes.h
+/usr/local/include/raspicam/raspicamtypes.h
+
+/usr/local/include/raspicam/raspicamtypes.h
+

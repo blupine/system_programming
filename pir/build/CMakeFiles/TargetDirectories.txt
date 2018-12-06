@@ -1,0 +1,3 @@
+/home/pi/Desktop/pir/build/CMakeFiles/rebuild_cache.dir
+/home/pi/Desktop/pir/build/CMakeFiles/edit_cache.dir
+/home/pi/Desktop/pir/build/CMakeFiles/cam.dir

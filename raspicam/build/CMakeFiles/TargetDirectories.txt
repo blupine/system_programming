@@ -1,0 +1,3 @@
+/home/pi/Desktop/sp/raspicam/build/CMakeFiles/rebuild_cache.dir
+/home/pi/Desktop/sp/raspicam/build/CMakeFiles/edit_cache.dir
+/home/pi/Desktop/sp/raspicam/build/CMakeFiles/main.dir
