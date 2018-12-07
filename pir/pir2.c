@@ -33,8 +33,8 @@ int main(){
 		read(fd,buf,1);
 		if(buf[0] == '1'){
 			printf("sensed---\n");
-//			execute_cam();
-//			sleep(5);
+			execute_cam();
+			sleep(15);
 		}
 		else{
 			sense_count = 0;

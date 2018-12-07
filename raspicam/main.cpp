@@ -52,6 +52,7 @@ int main ( int argc,char **argv )
     sprintf(convert_com, "convert %s %s.jpg", name,  name);
     printf("convert : %s\n", convert_com);
     system(convert_com);
+   
     //upload routine
     char command[200];
     sprintf(command, "curl -F \"msg=image\" -F \"photo=@%s.jpg\" -F \"pet_idx=1\" \"http://challenge.ajou-whois.org/sp/index.php?page=addEvent\"", name);
