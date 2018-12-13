@@ -4,101 +4,94 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
-#define MAXTIMINGS    85
-#define DHTPIN        7 //wPi pin. physical num 7
+#define MOTOR_DEV "/dev/motor_dev"
+#define MAXTIMINGS    85 // timing grows up to 84
+#define DHTPIN        7
 
-int dat[5] = {0, 0, 0, 0, 0 };
+int dat[5] = {0, 0, 0, 0, 0 }; // data array for get humidity & temperature data
 
 int get_humidity()
 {
-    uint8_t laststate    = HIGH;
-    uint8_t counter        = 0;
-    uint8_t j        = 0, i;
-    float    f;
+    uint8_t laststate = HIGH;	// save last gpio state (LOW or HIGH)
+    uint8_t count = 0;		// counts time of HIGH signal 
+    uint8_t j = 0;
+    uint8_t i = 0;
 
     dat[0] = dat[1] = dat[2] = dat[3] = dat[4] = 0;
 
-    pinMode( DHTPIN, OUTPUT );
-    digitalWrite( DHTPIN, LOW );
+    pinMode( DHTPIN, OUTPUT );		// set pin mode to send start signal
+    digitalWrite( DHTPIN, LOW );	// send start signal, LOW siganl for 18ms
     delay(18);
-    digitalWrite( DHTPIN, HIGH );
+    digitalWrite( DHTPIN, HIGH );	// send HIGH signal for 40us
     delayMicroseconds( 40 );
-    pinMode( DHTPIN, INPUT );
+    pinMode( DHTPIN, INPUT ); 		// set pin mode to receive response from DHT sensor
 
     for ( i = 0; i < MAXTIMINGS; i++ )
     {
-        counter = 0;
+	printf("i : %d\n", i);
+        count = 0;
         while ( digitalRead( DHTPIN ) == laststate )
         {
-            counter++;
+	    // read data in bits. count HIGH signal time
+	    // 26~28ms means 0, over 70 means 1
+            count++;
             delayMicroseconds( 1 );
-            if ( counter == 255 )
-            {
+            if ( count == 255 )
                 break;
-            }
         }
         laststate = digitalRead( DHTPIN );
 
-        if ( counter == 255 )
+        if ( count == 255 )
             break;
 
         if ( (i >= 4) && (i % 2 == 0) )
         {
             dat[j / 8] <<= 1;
-            if ( counter > 50 )
-                dat[j / 8] |= 1;
-            j++;
+            if ( count > 40 ) // 26~28ms means 0, over 70 means 1, so we set the boundary 
+                dat[j / 8] |= 1; // if the read bit is 1, 
+            j++; // increase bit index
         }
     }
     if ( (j >= 40) &&
          (dat[4] == ( (dat[0] + dat[1] + dat[2] + dat[3]) & 0xFF) ) )
     {
-	return dat[0]; // only return  decimal part of humidity
+	// if all 5 bytes received, and checksum also correct
+	return dat[0]; // only return integer part of humidity
     }else  {
+	// if invalid data
 	return 0;
-       //printf("Data not good, skip\n" );
     }
-    //return 0;
 }
 
-#define MOTOR_DEV "/dev/motor_dev"
-
-
 void clean_sheet(){
-    fprintf(stderr, "clean sheet called!\n");
-    int motor_fd = 0;
-    char prev_value = 0;
-    char next_value = 0;
-    motor_fd = open(MOTOR_DEV, O_WRONLY);
-    if(motor_fd < 0){
-        fprintf(stderr, "[-] open error button : %d\n", motor_fd);
-        exit(-1);
+    if(fork() == 0){
+	// execute servo motor on child process
+        execvp("/home/pi/Desktop/sp/urine/servo3", NULL);
     }
-
-    write(motor_fd, "13", 2);
-    sleep(5);
-    write(motor_fd, "14", 2);
-    sleep(5);
-    close(motor_fd);
-    fprintf("closing motor!\n");
+    else{
+	// wait child process
+        wait(0);
+    }
 }
 
 int main( void )
 {
-    printf( "Urine sheet cleaner.\n" );
-
     int humidity = 0;
 
     if ( wiringPiSetup() == -1 )
-        exit( 1 );
+        exit(1);
 
-    while ( 1 ){
-        humidity = get_humidity();
-        if(humidity > 30){
-	    printf("지렸다 : %d\n", humidity);
-            clean_sheet();
-        }
+    while(1){
+        humidity = get_humidity(); // get current humidity data from dht11
+        if(humidity > 45){	   // if humidtiy exceeds 45, clean urine sheet with motor
+	    printf("지렸다 : %d\n", humidity); 
+            clean_sheet();	   // run motor & clean urine sheet
+	    // upload log to server with 'curl' linux utility
+	    system("curl -XPOST -d \"pet_idx=1&msg=시트를닦았다.\" http://challenge.ajou-whois.org/sp/index.php?page=addEvent");
+	    sleep(20); // delay for next sensing
+ }
 	else
 	    printf("안지렸다 : %d\n", humidity);
         delay( 1000 );
