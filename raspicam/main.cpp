@@ -7,58 +7,57 @@
 #include <string.h>
 
 #define PATH "/home/pi/Desktop/sp/raspicam/build"
-using namespace std;
 
+using namespace std;
 
 int main ( int argc,char **argv )
 {
-    time_t curr_time;
+    time_t curr_time;	// current time is used for saving file name
     struct tm *curr_tm;
     curr_time= time(NULL);
     curr_tm=localtime(&curr_time);
 
     raspicam::RaspiCam Camera; //Cmaera object
 
-    //Open camera
-    cout<<"Opening Camera..."<<endl;
-    if ( !Camera.open()) {cerr<<"Error opening camera"<<endl;return -1;}
-
-    //wait a while until camera stabilizes
-    cout<<"Sleeping for 3 secs"<<endl;
+    if (!Camera.open()){
+	cerr<<"Error opening camera"<<endl;
+	return -1;
+    }
+    //wait for camera stabilization
     sleep(3);
 
-
-    //capture
+    // taking a picture
     Camera.grab();
 
-    //allocate memory
+    // allocate memory for photo data
     unsigned char *data=new unsigned char[  Camera.getImageTypeSize ( raspicam::RASPICAM_FORMAT_RGB )];
 
-    //extract the image in rgb format
-    Camera.retrieve ( data,raspicam::RASPICAM_FORMAT_RGB );//get camera image
+    Camera.retrieve ( data,raspicam::RASPICAM_FORMAT_RGB ); //get camera image
 
-    char name[100];
+    char name[100]; // photo name
 
     sprintf(name, "%s/image_%d-%d-%d", PATH, curr_tm->tm_hour, curr_tm->tm_min, curr_tm->tm_sec);
 
-    //save
-    std::ofstream outFile ( name, std::ios::binary );
+    std::ofstream outFile ( name, std::ios::binary ); // save photo in name
     outFile<<"P6\n"<<Camera.getWidth() <<" "<<Camera.getHeight() <<" 255\n";
     outFile.write ( ( char* ) data, Camera.getImageTypeSize ( raspicam::RASPICAM_FORMAT_RGB ) );
-    cout<< "File : " << name <<endl;
 
     sleep(5);
+
+    // the default photo format that raspicam creates is ppm
+    // so we should convert the photo to jpg format from ppm
+    // we used linux utility 'imagemagick' to convert image, and this is array for the command
     char convert_com[100];
-    sprintf(convert_com, "convert %s %s.jpg", name,  name);
-    printf("convert : %s\n", convert_com);
+
+    sprintf(convert_com, "convert %s %s.jpg", name,  name); // convert ppm file to jpg file
+    printf("convert : %s\n", convert_com); //
     system(convert_com);
-   
-    //upload routine
+
+    // array for upload command
     char command[200];
+    // make upload command
     sprintf(command, "curl -F \"msg=image\" -F \"photo=@%s.jpg\" -F \"pet_idx=1\" \"http://challenge.ajou-whois.org/sp/index.php?page=addEvent\"", name);
     system(command);
-    printf(command);
-
     //free resrources
     delete data;
     return 0;

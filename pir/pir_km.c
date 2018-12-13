@@ -5,7 +5,7 @@
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 
-#define GPIO_OUT 12//temp GPIO
+#define GPIO_OUT 12
 #define DEV_NAME "pir_km"
 #define DEV_NUM 261
 
@@ -13,9 +13,8 @@ MODULE_LICENSE("GPL");
 
 int pir_open(struct inode* pinode, struct file* pfile){
 	printk(KERN_ALERT "OPEN pir_km\n");
-	gpio_request(GPIO_OUT, "GPIO_BODY");
+	gpio_request(GPIO_OUT, "GPIO_PIR"); // gpio pin request
 	gpio_direction_input(GPIO_OUT);
-
 	return 0;
 }
 
@@ -27,9 +26,10 @@ int pir_close(struct inode* pinode, struct file* pfile){
 }
 
 ssize_t pir_read(struct file* pfile, char __user* buffer, size_t length, loff_t* offset){
-
-	if(gpio_get_value(GPIO_OUT) == 1)	copy_to_user(buffer,"1",1);
-	else	copy_to_user(buffer,"0",1);
+	if(gpio_get_value(GPIO_OUT) == 1)	// if value read from gpio is 1
+		copy_to_user(buffer,"1",1);	// it is detected and copy to user
+	else					// else, it is not detected, copy 0 to user
+		copy_to_user(buffer,"0",1);
 
 	return 0;
 }
