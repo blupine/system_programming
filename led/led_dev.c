@@ -50,7 +50,7 @@ struct file_operations fop = {
 };
 
 int __init led_init(void){
-	printk(KERN_ALERT "INIT led_dev\nsudo mknod -m 666 /dev/3led_dev c 262 0\n");
+	printk(KERN_ALERT "INIT led_dev\n");
 	register_chrdev(DEV_NUM, DEV_NAME, &fop);
 	return 0;
 }
